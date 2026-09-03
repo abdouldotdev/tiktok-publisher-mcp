@@ -1,11 +1,11 @@
 {
-  "name": "tiktok-farm-mcp",
+  "name": "tiktok-publisher-mcp",
   "version": "1.0.0",
   "private": true,
-  "description": "Universal TikTok MCP server for auth, multi-account farm management, content posting (photo carousels and videos), and analytics.",
+  "description": "Universal TikTok MCP server for auth, multi-account management, content posting (photo carousels and videos), and analytics.",
   "type": "module",
   "bin": {
-    "tiktok-farm-mcp": "dist/index.js"
+    "tiktok-publisher-mcp": "dist/index.js"
   },
   "main": "dist/index.js",
   "engines": {

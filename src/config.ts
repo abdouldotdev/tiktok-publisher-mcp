@@ -35,7 +35,7 @@ export interface TikTokProfile {
 export type ProfileStore = Record<string, TikTokProfile>;
 
 export function homeDir(): string {
-  return process.env.TIKTOK_FARM_HOME || path.join(os.homedir(), ".tiktok-farm-mcp");
+  return process.env.TIKTOK_PUBLISHER_HOME || path.join(os.homedir(), ".tiktok-publisher-mcp");
 }
 
 function storePath(): string {

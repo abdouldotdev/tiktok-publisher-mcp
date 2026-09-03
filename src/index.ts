@@ -13,7 +13,7 @@ import { registerPublishTools } from "./tools/publish.js";
 import { registerStatsTools } from "./tools/stats.js";
 
 const server = new McpServer({
-  name: "tiktok-farm-mcp",
+  name: "tiktok-publisher-mcp",
   version: "1.0.0",
 });
 

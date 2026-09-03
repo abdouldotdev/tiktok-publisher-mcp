@@ -1,6 +1,6 @@
-# tiktok-farm-mcp
+# tiktok-publisher-mcp
 
-Universal, reusable MCP server for automated TikTok multi-account operations:
+Universal, reusable MCP server for automated TikTok operations:
 - **Profiles & Credentials**: Multi-tenant isolation (`glowe`, `faithlock`, `autoviral`).
 - **Authentication**: Official OAuth v2 with persistent token store & automatic refresh.
 - **Publishing**: Official Content Posting API v2 for photo carousels (`PULL_FROM_URL`) and videos, with draft (`MEDIA_UPLOAD`) or direct (`DIRECT_POST`) options.
@@ -35,7 +35,7 @@ Universal, reusable MCP server for automated TikTok multi-account operations:
 ## 🚀 Setup & Installation
 
 ```bash
-cd /Users/abdoul/development/internal-tools/tiktok-farm-mcp
+cd /Users/abdoul/development/internal-tools/tiktok-publisher-mcp
 npm install
 npm run build
 ```
@@ -47,10 +47,10 @@ Add to your `mcpServers` configuration:
 ```json
 {
   "mcpServers": {
-    "tiktok-farm": {
+    "tiktok-publisher": {
       "command": "node",
       "args": [
-        "/Users/abdoul/development/internal-tools/tiktok-farm-mcp/dist/index.js"
+        "/Users/abdoul/development/internal-tools/tiktok-publisher-mcp/dist/index.js"
       ]
     }
   }
