@@ -21,11 +21,12 @@ Universal, reusable MCP server for automated TikTok multi-account operations:
 | | `tiktok_accounts_list` | List connected accounts for a profile and check token validity |
 | | `tiktok_account_refresh`| Manually trigger token refresh for an account |
 | | `tiktok_account_remove` | Disconnect an account from a profile |
-| **Publishing** | `tiktok_publish_photos`| Publish photo slideshow / carousel via official Content Posting API v2 |
-| | `tiktok_publish_video` | Publish video via official Content Posting API v2 |
-| | `tiktok_publish_status`| Query publish status and retrieve public post ID |
+| **Publishing** | `tiktok_publish_post` | Publish a post (photo carousel or video) via Content Posting API v2 |
+| | `tiktok_publish_status`| Query post processing & publishing status by `publish_id` |
+| | `tiktok_publish_photos`| Convenience alias to publish a photo carousel |
+| | `tiktok_publish_video` | Convenience alias to publish a video |
 | **Analytics** | `tiktok_creator_info` | Query creator account capabilities & limits |
-| | `tiktok_account_stats` | Retrieve follower count, following count, likes, video count |
+| | `tiktok_account_stats` | Retrieve follower count, following count, likes, post count |
 | | `tiktok_post_stats` | Query views, likes, comments, shares for specific post IDs |
 | | `tiktok_posts_list` | List recent posts and analytics for an account |
 
@@ -86,9 +87,11 @@ Add to your `mcpServers` configuration:
    }
    ```
 
-### 3. Publish content from any app
-Your app generates the images/video and uploads them to R2, then calls:
+### 3. Publish a post from any app
+Your app generates the images or video and uploads them to R2/CDN, then calls `tiktok_publish_post`:
+
 ```json
+// Example: Photo carousel post (slideshow)
 {
   "profile": "glowe",
   "account": "glowe_official",
@@ -98,6 +101,19 @@ Your app generates the images/video and uploads them to R2, then calls:
   ],
   "title": "New Hair Trends ✨",
   "description": "Which look is your favorite? #hair #glowe",
+  "post_mode": "MEDIA_UPLOAD",
+  "privacy_level": "PUBLIC_TO_EVERYONE"
+}
+```
+
+```json
+// Example: Video post
+{
+  "profile": "glowe",
+  "account": "glowe_official",
+  "video_url": "https://pub-d1c1.../video.mp4",
+  "title": "Trending Bob Hairstyles 💇‍♀️",
+  "description": "Watch until the end! #hairgoals #glowe",
   "post_mode": "MEDIA_UPLOAD",
   "privacy_level": "PUBLIC_TO_EVERYONE"
 }
