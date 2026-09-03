@@ -1,3 +1,4 @@
+import QRCode from "qrcode";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { DEFAULT_PROFILE } from "../config.js";
@@ -12,7 +13,7 @@ import {
 export function registerAuthTools(server: McpServer): void {
   server.tool(
     "tiktok_auth_start",
-    "Begin TikTok OAuth flow. Returns an authorization URL to open in a browser. TikTok will redirect back to redirectUri.",
+    "Begin TikTok OAuth flow. Returns an authorization URL and a scannable QR code to open directly on your mobile phone or browser.",
     {
       profile: z.string().default(DEFAULT_PROFILE).describe("Profile name (e.g. 'glowe', 'faithlock')."),
       account: z.string().describe("Identifier for this account (e.g. 'glowe_official', 'brand_us')."),
@@ -25,19 +26,35 @@ export function registerAuthTools(server: McpServer): void {
     },
     async (args) => {
       const res = authStart(args);
+
+      let qrCodeAscii = "";
+      try {
+        qrCodeAscii = await QRCode.toString(res.authorizeUrl, {
+          type: "terminal",
+          small: true,
+        });
+      } catch (err) {
+        qrCodeAscii = `(QR generation error: ${(err as Error).message})`;
+      }
+
+      const responseText = [
+        "📱 SCAN TO AUTHORIZE TIKTOK ON YOUR PHONE:",
+        "\n" + qrCodeAscii,
+        "Or click the authorization URL in your browser:",
+        res.authorizeUrl,
+        "\nNext steps:",
+        "1. Approve access on TikTok (on phone or browser).",
+        "2. The browser will land on your callback URL (https://auto-viral.com/auth/tiktok/callback).",
+        "3. Copy that full redirected URL and pass it to 'tiktok_auth_complete'.",
+        "\nOAuth Details:",
+        JSON.stringify(res, null, 2),
+      ].join("\n");
+
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(
-              {
-                instructions:
-                  "Open authorizeUrl in browser, approve permissions, then copy the URL you are redirected to and pass it to tiktok_auth_complete.",
-                ...res,
-              },
-              null,
-              2
-            ),
+            text: responseText,
           },
         ],
       };
