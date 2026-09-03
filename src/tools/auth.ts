@@ -80,8 +80,9 @@ export function registerAuthTools(server: McpServer): void {
     },
     async ({ state, profile, account, timeoutSec = 60 }) => {
       const pollEndpoints = [
-        `https://auto-viral.com/api/auth/tiktok/poll?state=${encodeURIComponent(state)}`,
+        `https://hnxjsudnoeofzaswdqoh.supabase.co/functions/v1/tiktok-callback?action=poll&state=${encodeURIComponent(state)}`,
         `https://auto-viral-sage.vercel.app/api/auth/tiktok/poll?state=${encodeURIComponent(state)}`,
+        `https://auto-viral.com/api/auth/tiktok/poll?state=${encodeURIComponent(state)}`,
       ];
 
       const startTime = Date.now();

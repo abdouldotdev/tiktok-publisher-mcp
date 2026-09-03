@@ -30,7 +30,11 @@ export function registerPublishTools(server: McpServer): void {
       video_url: z
         .string()
         .optional()
-        .describe("Publicly reachable URL for a video post. Provide either photo_images OR video_url."),
+        .describe("Publicly reachable URL or local file path for a video post. Provide either photo_images OR video_url."),
+      source: z
+        .enum(["PULL_FROM_URL", "FILE_UPLOAD"])
+        .optional()
+        .describe("Media transfer method. Defaults to FILE_UPLOAD for local files, PULL_FROM_URL for http(s) URLs."),
       title: z.string().optional().describe("Post title / cover text."),
       description: z.string().optional().describe("Caption / post description with hashtags."),
       post_mode: PostModeSchema.default("MEDIA_UPLOAD").describe(
@@ -144,7 +148,11 @@ export function registerPublishTools(server: McpServer): void {
     {
       profile: z.string().default(DEFAULT_PROFILE).describe("Profile name."),
       account: z.string().describe("Target TikTok account name."),
-      video_url: z.string().describe("Video URL."),
+      video_url: z.string().describe("Publicly reachable URL or local file path to video."),
+      source: z
+        .enum(["PULL_FROM_URL", "FILE_UPLOAD"])
+        .optional()
+        .describe("Defaults to FILE_UPLOAD if local path, PULL_FROM_URL if http(s) URL."),
       title: z.string().optional().describe("Video title."),
       description: z.string().optional().describe("Caption with hashtags."),
       post_mode: PostModeSchema.default("MEDIA_UPLOAD").describe("MEDIA_UPLOAD (draft) or DIRECT_POST."),

@@ -1,8 +1,4 @@
-/**
- * TikTok Content Posting API v2.
- * Official TikTok API client for photo and video publishing via PULL_FROM_URL.
- */
-
+import fs from "fs";
 import { requestJson } from "../http.js";
 import { getAccessToken } from "./oauth.js";
 
@@ -43,6 +39,16 @@ interface CreatorInfoResponse {
 
 function assertOk(error: { code?: string; message?: string } | undefined, context: string): void {
   if (error && error.code && error.code !== "ok") {
+    if (error.code === "url_ownership_unverified") {
+      throw new Error(
+        `${context} failed: [url_ownership_unverified] TikTok requires domain verification for PULL_FROM_URL. Go to TikTok for Developers > App > Products > Content Posting API > Web Domain Verification and add your hosting domain (or use FILE_UPLOAD for local files).`
+      );
+    }
+    if (error.code === "scope_not_authorized") {
+      throw new Error(
+        `${context} failed: [scope_not_authorized] Missing required TikTok permission scope. Re-authorize your account with the required scopes.`
+      );
+    }
     throw new Error(`${context} failed: [${error.code}] ${error.message ?? "unknown error"}`);
   }
 }
@@ -89,6 +95,7 @@ export interface PublishPhotosOptions {
 
 export interface PublishVideoOptions {
   video_url: string;
+  source?: "PULL_FROM_URL" | "FILE_UPLOAD";
   title?: string;
   description?: string;
   privacy_level?: PrivacyLevel;
@@ -108,7 +115,7 @@ export interface PublishResult {
 }
 
 interface InitResponse {
-  data?: { publish_id?: string };
+  data?: { publish_id?: string; upload_url?: string };
   error?: { code?: string; message?: string };
 }
 
@@ -185,8 +192,44 @@ export async function publishVideo(
   const token = await getAccessToken(profile, account);
   const postMode: PostMode = opts.post_mode ?? "MEDIA_UPLOAD";
 
+  // Auto-detect FILE_UPLOAD if video_url is a local file path
+  const isLocalFile = fs.existsSync(opts.video_url);
+  const sourceMode = opts.source ?? (isLocalFile ? "FILE_UPLOAD" : "PULL_FROM_URL");
+
+  let fileSize = 0;
+  let fileBuffer: Buffer | null = null;
+  if (sourceMode === "FILE_UPLOAD") {
+    if (!isLocalFile) {
+      throw new Error(`FILE_UPLOAD mode requires a valid local file path: '${opts.video_url}'`);
+    }
+    const stat = fs.statSync(opts.video_url);
+    fileSize = stat.size;
+    fileBuffer = fs.readFileSync(opts.video_url);
+  }
+
+  // Official TikTok API:
+  // MEDIA_UPLOAD (draft inbox) -> /v2/post/publish/inbox/video/init/
+  // DIRECT_POST (feed publish)  -> /v2/post/publish/video/init/
+  const initEndpoint =
+    postMode === "MEDIA_UPLOAD"
+      ? `${BASE}/post/publish/inbox/video/init/`
+      : `${BASE}/post/publish/video/init/`;
+
+  const sourceInfo =
+    sourceMode === "FILE_UPLOAD"
+      ? {
+          source: "FILE_UPLOAD",
+          video_size: fileSize,
+          chunk_size: fileSize,
+          total_chunk_count: 1,
+        }
+      : {
+          source: "PULL_FROM_URL",
+          video_url: opts.video_url,
+        };
+
   const res = await requestJson<InitResponse>({
-    url: `${BASE}/post/publish/content/init/`,
+    url: initEndpoint,
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -200,16 +243,11 @@ export async function publishVideo(
         disable_comment: opts.disable_comment ?? false,
         disable_duet: opts.disable_duet ?? false,
         disable_stitch: opts.disable_stitch ?? false,
+        video_cover_timestamp_ms: opts.video_cover_timestamp_ms ?? 1000,
         brand_content_toggle: opts.brand_content_toggle ?? false,
         brand_organic_toggle: opts.brand_organic_toggle ?? false,
       },
-      source_info: {
-        source: "PULL_FROM_URL",
-        video_url: opts.video_url,
-        video_cover_timestamp_ms: opts.video_cover_timestamp_ms ?? 1000,
-      },
-      post_mode: postMode,
-      media_type: "VIDEO",
+      source_info: sourceInfo,
     },
     timeoutMs: 120_000,
   });
@@ -218,6 +256,24 @@ export async function publishVideo(
   const publishId = res.data?.publish_id;
   if (!publishId) {
     throw new Error(`publishVideo init returned no publish_id: ${JSON.stringify(res)}`);
+  }
+
+  // If FILE_UPLOAD, stream binary data to TikTok upload_url
+  if (sourceMode === "FILE_UPLOAD" && res.data?.upload_url && fileBuffer) {
+    const uploadRes = await fetch(res.data.upload_url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Range": `bytes 0-${fileSize - 1}/${fileSize}`,
+        "Content-Length": String(fileSize),
+      },
+      body: fileBuffer,
+    });
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text().catch(() => "");
+      throw new Error(`Failed to upload video binary to TikTok: ${uploadRes.status} ${errText}`);
+    }
   }
 
   return { publish_id: publishId, account, post_mode: postMode };
