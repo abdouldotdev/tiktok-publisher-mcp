@@ -12,9 +12,9 @@ import {
 export function registerProfileTools(server: McpServer): void {
   server.tool(
     "tiktok_profile_set",
-    "Configure credentials and settings for a project profile (e.g. 'glowe', 'faithlock', 'autoviral').",
+    "Configure credentials and settings for a project profile (e.g. 'project_name').",
     {
-      profile: z.string().default(DEFAULT_PROFILE).describe("Profile name to create or update."),
+      profile: z.string().default(DEFAULT_PROFILE).describe("Profile name to create or update (e.g. 'project_name')."),
       clientKey: z.string().optional().describe("TikTok developer app Client Key."),
       clientSecret: z.string().optional().describe("TikTok developer app Client Secret."),
       redirectUri: z

@@ -1,7 +1,7 @@
 /**
  * TikTok Farm MCP — Profile and credentials store.
  *
- * Each profile corresponds to an app or brand (e.g. "glowe", "faithlock", "autoviral").
+ * Each profile corresponds to an app or brand (e.g. "project_name").
  * Accounts are stored per profile with persistent OAuth tokens and auto-refresh.
  *
  * Storage: $TIKTOK_FARM_HOME/profiles.json (default ~/.tiktok-farm-mcp/profiles.json)

@@ -1,7 +1,7 @@
 # tiktok-publisher-mcp
 
 Universal, reusable MCP server for automated TikTok operations:
-- **Profiles & Credentials**: Multi-tenant isolation (`glowe`, `faithlock`, `autoviral`).
+- **Profiles & Credentials**: Multi-tenant isolation (`project_name`).
 - **Authentication**: Official OAuth v2 with persistent token store & automatic refresh.
 - **Publishing**: Official Content Posting API v2 for photo carousels (`PULL_FROM_URL`) and videos, with draft (`MEDIA_UPLOAD`) or direct (`DIRECT_POST`) options.
 - **Analytics & Stats**: Real-time creator permissions, account metrics, and post performance stats.
@@ -16,7 +16,8 @@ Universal, reusable MCP server for automated TikTok operations:
 | | `tiktok_profile_get` | Inspect profile configuration (secrets redacted) |
 | | `tiktok_profile_list` | List all profiles and connected accounts |
 | | `tiktok_profile_delete` | Delete a profile and its stored accounts |
-| **Auth** | `tiktok_auth_start` | Generate TikTok OAuth authorization URL with PKCE |
+| **Auth** | `tiktok_auth_start` | Generate TikTok OAuth authorization URL with PKCE & QR code |
+| | `tiktok_auth_wait` | Wait for user mobile scan & auto-complete authentication |
 | | `tiktok_auth_complete` | Complete OAuth with redirect URL, exchange code & save tokens |
 | | `tiktok_accounts_list` | List connected accounts for a profile and check token validity |
 | | `tiktok_account_refresh`| Manually trigger token refresh for an account |
@@ -64,7 +65,7 @@ Add to your `mcpServers` configuration:
 ### 1. Configure a profile for an app
 ```json
 {
-  "profile": "glowe",
+  "profile": "project_name",
   "clientKey": "YOUR_TIKTOK_CLIENT_KEY",
   "clientSecret": "YOUR_TIKTOK_CLIENT_SECRET",
   "redirectUri": "https://auto-viral.com/auth/tiktok/callback"
@@ -74,16 +75,15 @@ Add to your `mcpServers` configuration:
 ### 2. Connect an account
 1. Call `tiktok_auth_start`:
    ```json
-   { "profile": "glowe", "account": "glowe_official" }
+   { "profile": "project_name", "account": "my_account" }
    ```
-2. Open the returned URL in your browser and approve.
-3. TikTok redirects to `https://auto-viral.com/auth/tiktok/callback?code=...&state=...`.
-4. Call `tiktok_auth_complete`:
+2. Scan the returned QR code with your phone camera and approve.
+3. Call `tiktok_auth_wait` (or pass the redirected URL to `tiktok_auth_complete`):
    ```json
    {
-     "profile": "glowe",
-     "account": "glowe_official",
-     "redirectUrl": "https://auto-viral.com/auth/tiktok/callback?code=...&state=..."
+     "profile": "project_name",
+     "account": "my_account",
+     "state": "STATE_FROM_AUTH_START"
    }
    ```
 
@@ -93,14 +93,14 @@ Your app generates the images or video and uploads them to R2/CDN, then calls `t
 ```json
 // Example: Photo carousel post (slideshow)
 {
-  "profile": "glowe",
-  "account": "glowe_official",
+  "profile": "project_name",
+  "account": "my_account",
   "photo_images": [
-    "https://pub-d1c1.../01.jpg",
-    "https://pub-d1c1.../02.jpg"
+    "https://cdn.example.com/01.jpg",
+    "https://cdn.example.com/02.jpg"
   ],
-  "title": "New Hair Trends ✨",
-  "description": "Which look is your favorite? #hair #glowe",
+  "title": "Post Title ✨",
+  "description": "Caption with hashtags #viral #trending",
   "post_mode": "MEDIA_UPLOAD",
   "privacy_level": "PUBLIC_TO_EVERYONE"
 }
@@ -109,11 +109,11 @@ Your app generates the images or video and uploads them to R2/CDN, then calls `t
 ```json
 // Example: Video post
 {
-  "profile": "glowe",
-  "account": "glowe_official",
-  "video_url": "https://pub-d1c1.../video.mp4",
-  "title": "Trending Bob Hairstyles 💇‍♀️",
-  "description": "Watch until the end! #hairgoals #glowe",
+  "profile": "project_name",
+  "account": "my_account",
+  "video_url": "https://cdn.example.com/video.mp4",
+  "title": "Video Title 🎬",
+  "description": "Watch until the end! #fyp #viral",
   "post_mode": "MEDIA_UPLOAD",
   "privacy_level": "PUBLIC_TO_EVERYONE"
 }

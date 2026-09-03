@@ -21,7 +21,7 @@ export function registerPublishTools(server: McpServer): void {
     "tiktok_publish_post",
     "Publish a post (photo carousel or video) to TikTok via official Content Posting API v2 (PULL_FROM_URL).",
     {
-      profile: z.string().default(DEFAULT_PROFILE).describe("Profile name (e.g. 'glowe', 'faithlock')."),
+      profile: z.string().default(DEFAULT_PROFILE).describe("Profile name (e.g. 'project_name')."),
       account: z.string().describe("Target TikTok account name."),
       photo_images: z
         .array(z.string())

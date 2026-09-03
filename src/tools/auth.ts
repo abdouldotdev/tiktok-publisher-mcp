@@ -16,8 +16,8 @@ export function registerAuthTools(server: McpServer): void {
     "tiktok_auth_start",
     "Begin TikTok OAuth flow. Returns an authorization URL and a scannable QR code to open directly on your mobile phone or browser.",
     {
-      profile: z.string().default(DEFAULT_PROFILE).describe("Profile name (e.g. 'glowe', 'faithlock')."),
-      account: z.string().describe("Identifier for this account (e.g. 'glowe_official', 'brand_us')."),
+      profile: z.string().default(DEFAULT_PROFILE).describe("Profile name (e.g. 'project_name')."),
+      account: z.string().describe("Identifier for this account (e.g. 'main_account', 'brand_us')."),
       redirectUri: z
         .string()
         .optional()
