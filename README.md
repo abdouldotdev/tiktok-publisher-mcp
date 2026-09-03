@@ -68,7 +68,7 @@ Add to your `mcpServers` configuration:
   "profile": "project_name",
   "clientKey": "YOUR_TIKTOK_CLIENT_KEY",
   "clientSecret": "YOUR_TIKTOK_CLIENT_SECRET",
-  "redirectUri": "https://auto-viral.com/auth/tiktok/callback"
+  "redirectUri": "https://hnxjsudnoeofzaswdqoh.supabase.co/functions/v1/tiktok-callback"
 }
 ```
 
@@ -77,8 +77,8 @@ Add to your `mcpServers` configuration:
    ```json
    { "profile": "project_name", "account": "my_account" }
    ```
-2. Scan the returned QR code with your phone camera and approve.
-3. Call `tiktok_auth_wait` (or pass the redirected URL to `tiktok_auth_complete`):
+2. Scan the returned QR code with your smartphone camera and approve.
+3. Call `tiktok_auth_wait` (or the MCP automatically listens):
    ```json
    {
      "profile": "project_name",
@@ -86,34 +86,42 @@ Add to your `mcpServers` configuration:
      "state": "STATE_FROM_AUTH_START"
    }
    ```
+   *The account is connected automatically in seconds with zero copy-pasting.*
 
 ### 3. Publish a post from any app
-Your app generates the images or video and uploads them to R2/CDN, then calls `tiktok_publish_post`:
+
+#### A. Photo Carousel (`photo_images`)
+Upload images to your Cloudflare R2 / verified CDN (`cdn.auto-viral.com`), then call `tiktok_publish_post` or `tiktok_publish_photos`:
 
 ```json
-// Example: Photo carousel post (slideshow)
 {
   "profile": "project_name",
   "account": "my_account",
   "photo_images": [
-    "https://cdn.example.com/01.jpg",
-    "https://cdn.example.com/02.jpg"
+    "https://cdn.auto-viral.com/slides/slide1.jpg",
+    "https://cdn.auto-viral.com/slides/slide2.jpg"
   ],
-  "title": "Post Title ✨",
-  "description": "Caption with hashtags #viral #trending",
+  "title": "Glowe Hair Inspiration ✨",
+  "description": "Fresh styles for the season! #hair #glowe #viral",
   "post_mode": "MEDIA_UPLOAD",
   "privacy_level": "PUBLIC_TO_EVERYONE"
 }
 ```
+* `post_mode: "MEDIA_UPLOAD"` sends the draft directly into your creator TikTok inbox for review.
+* `post_mode: "DIRECT_POST"` publishes live to the TikTok feed.
+
+#### B. Video Post (`video_url`)
+You can pass either a public URL or a **direct local file path**:
 
 ```json
-// Example: Video post
+// Example: Direct local file upload (No domain verification needed!)
 {
   "profile": "project_name",
   "account": "my_account",
-  "video_url": "https://cdn.example.com/video.mp4",
-  "title": "Video Title 🎬",
-  "description": "Watch until the end! #fyp #viral",
+  "video_url": "/Users/abdoul/videos/output.mp4",
+  "source": "FILE_UPLOAD",
+  "title": "Hair Transformation 💇‍♀️",
+  "description": "Watch until the end! #transformation #viral",
   "post_mode": "MEDIA_UPLOAD",
   "privacy_level": "PUBLIC_TO_EVERYONE"
 }
