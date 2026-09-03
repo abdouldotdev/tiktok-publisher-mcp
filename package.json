@@ -1,0 +1,36 @@
+{
+  "name": "tiktok-farm-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Universal TikTok MCP server for auth, multi-account farm management, content posting (photo carousels and videos), and analytics.",
+  "type": "module",
+  "bin": {
+    "tiktok-farm-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "tiktok",
+    "content-posting-api",
+    "tiktok-farm"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}
