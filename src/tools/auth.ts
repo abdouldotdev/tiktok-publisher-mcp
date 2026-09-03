@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { requestJson } from "../lib/http.js";
 import { DEFAULT_PROFILE } from "../config.js";
 import {
   authComplete,
@@ -55,6 +56,92 @@ export function registerAuthTools(server: McpServer): void {
           {
             type: "text",
             text: responseText,
+          },
+        ],
+      };
+    }
+  );
+
+  server.tool(
+    "tiktok_auth_wait",
+    "Wait for the user to scan the QR code and approve on their phone. Automatically catches the code from the auto-viral.com relay and connects the account without any copy-paste.",
+    {
+      state: z.string().describe("OAuth state string from tiktok_auth_start."),
+      profile: z.string().default(DEFAULT_PROFILE).describe("Profile name."),
+      account: z.string().describe("Account identifier."),
+      timeoutSec: z
+        .number()
+        .int()
+        .min(5)
+        .max(120)
+        .optional()
+        .default(60)
+        .describe("Max seconds to wait for mobile scan."),
+    },
+    async ({ state, profile, account, timeoutSec = 60 }) => {
+      const pollEndpoints = [
+        `https://auto-viral.com/api/auth/tiktok/poll?state=${encodeURIComponent(state)}`,
+        `https://auto-viral-sage.vercel.app/api/auth/tiktok/poll?state=${encodeURIComponent(state)}`,
+      ];
+
+      const startTime = Date.now();
+      const maxMs = timeoutSec * 1000;
+
+      while (Date.now() - startTime < maxMs) {
+        for (const url of pollEndpoints) {
+          try {
+            const res = await requestJson<{ found: boolean; code: string | null }>({
+              url,
+              timeoutMs: 4000,
+            });
+
+            if (res && res.found && res.code) {
+              const completeResult = await authComplete({
+                profile,
+                account,
+                code: res.code,
+                state,
+              });
+
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      {
+                        success: true,
+                        message: `🎉 TikTok account '${account}' connected automatically from phone scan!`,
+                        ...completeResult,
+                      },
+                      null,
+                      2
+                    ),
+                  },
+                ],
+              };
+            }
+          } catch {
+            // Ignore transient network errors during polling
+          }
+        }
+
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                success: false,
+                message:
+                  "Timed out waiting for mobile scan. Run 'tiktok_auth_wait' again, or paste the redirected URL into 'tiktok_auth_complete'.",
+                state,
+              },
+              null,
+              2
+            ),
           },
         ],
       };
